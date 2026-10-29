@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>技术学习</title>
+  <link rel="stylesheet" href="./css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+</head>
+<body>
+  <header class="header">
+    <div class="header-left">
+      <h1>技术学习</h1>
+      <p class="sub">SSE 实时推送 · 持仓加权主估值 · 指数/ETF 对比参考 · 后端落盘 · 每 3 分钟采集</p>
+    </div>
+    <div class="header-right">
+      <div class="theme-switch" id="themeSwitch">
+        <button type="button" class="theme-btn active" data-theme="purple">暗紫</button>
+        <button type="button" class="theme-btn" data-theme="slate">石板</button>
+      </div>
+      <div class="status" id="status">连接中...</div>
+      <div class="countdown" id="countdown">--</div>
+      <button class="btn" id="refreshBtn">立即刷新</button>
+      <button class="btn btn-ghost" id="collectBtn">触发采集</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <nav class="fund-tabs" id="fundTabs" aria-label="基金切换"></nav>
+
+    <section class="cards" id="cards"></section>
+
+    <section class="chart-panel" id="fundHistPanel">
+      <div class="chart-header">
+        <h2>历史涨幅走势</h2>
+        <div class="range-tabs" id="histTabs">
+          <button type="button" class="range-btn active" data-range="30">近1月</button>
+          <button type="button" class="range-btn" data-range="90">近3月</button>
+          <button type="button" class="range-btn" data-range="180">近6月</button>
+          <button type="button" class="range-btn" data-range="365">近1年</button>
+          <button type="button" class="range-btn" data-range="0">全部</button>
+        </div>
+      </div>
+      <div class="history-grid">
+        <div class="history-item">
+          <div class="history-title" id="histTitleAi">易方达人工智能ETF联接C</div>
+          <div class="history-chart" id="histChartAi"></div>
+        </div>
+        <div class="history-item">
+          <div class="history-title" id="histTitleNev">天弘中证新能源汽车指数C</div>
+          <div class="history-chart" id="histChartNev"></div>
+        </div>
+      </div>
+      <div class="muted" id="histMeta" style="padding:4px 0 8px">加载历史净值...</div>
+    </section>
+
+    <section class="chart-panel" id="fundIntradayPanel">
+      <div class="chart-header">
+        <h2>后端记录走势（9:30 - 15:00）</h2>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div id="chart" class="chart"></div>
+      <div class="chart-empty" id="chartEmpty">暂无后端记录，交易日 9:30 后每 3 分钟写入 data/*.json...</div>
+    </section>
+
+    <section class="table-panel" id="fundHoldingsPanel">
+      <div class="chart-header">
+        <h2>持仓股票实时涨跌（主估值）</h2>
+        <div class="muted" id="liveMeta">加载中...</div>
+      </div>
+      <div class="holdings-grid" id="holdingsGrid"></div>
+    </section>
+
+    <section class="chart-panel" id="comparePanel">
+      <div class="chart-header">
+        <h2>真实净值 vs 系统估值（准确度）</h2>
+        <div class="chart-tools">
+          <div class="range-tabs" id="compareModeTabs">
+            <button type="button" class="range-btn active" data-mode="nav">净值</button>
+            <button type="button" class="range-btn" data-mode="pct">涨幅%</button>
+          </div>
+          <div class="range-tabs" id="compareRangeTabs">
+<button type="button" class="range-btn active" data-range="30">近1月</button>
+          <button type="button" class="range-btn" data-range="90">近3月</button>
+          <button type="button" class="range-btn" data-range="180">近6月</button>
+          <button type="button" class="range-btn" data-range="365">近1年</button>
+            <button type="button" class="range-btn" data-range="0">全部</button>
+          </div>
+        </div>
+      </div>
+      <div id="compareChart" class="chart"></div>
+      <div class="muted" id="compareMeta" style="padding:4px 0 8px">加载对比数据...</div>
+    </section>
+
+    </main>
+
+  <footer class="footer">
+    估值：天天基金持仓加权（fallback 跟踪指数/ETF）· 通道 SSE /api/stream · 文件 data/YYYY-MM-DD.json + holdings.json · 不构成投资建议
+  </footer>
+
+  <script src="./js/collector.js"></script>
+</body>
+</html>

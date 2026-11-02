@@ -92,6 +92,27 @@
       <div class="muted" id="compareMeta" style="padding:4px 0 8px">加载对比数据...</div>
     </section>
 
+    <section class="chart-panel" id="guessPanel">
+      <div class="chart-header">
+        <h2>猜次日涨跌日历</h2>
+        <div class="chart-tools">
+          <div class="muted" id="guessStats">加载中...</div>
+          <div class="range-tabs">
+            <button type="button" class="range-btn" id="guessPrev" aria-label="上个月">‹</button>
+            <span class="guess-month" id="guessMonthLabel">--</span>
+            <button type="button" class="range-btn" id="guessNext" aria-label="下个月">›</button>
+          </div>
+        </div>
+      </div>
+      <div class="guess-weekdays">
+        <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+      </div>
+      <div class="guess-calendar" id="guessCalendar"></div>
+      <div class="muted" id="guessNote" style="padding:8px 0">
+        猜 = AI 当日 14:30 分析后给出的次日收盘方向；实 = 次日真实净值涨跌。无预测记录的日期留空。
+      </div>
+    </section>
+
     </main>
 
   <footer class="footer">

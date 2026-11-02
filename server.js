@@ -12,6 +12,7 @@ const PORT = process.env.PORT || 5173;
 const ROOT = __dirname;
 const DATA_DIR = path.join(ROOT, "data");
 const DAILY_EST_FILE = path.join(DATA_DIR, "daily-estimates.json");
+const AI_PRED_FILE = path.join(DATA_DIR, "ai-predictions.json");
 const KEEP_DAYS = 30;
 const KEEP_DAILY_EST_DAYS = 400;
 const REFRESH_MS = 3 * 60 * 1000;
@@ -178,6 +179,68 @@ function writeDailyEstimates(data) {
   const tmp = `${DAILY_EST_FILE}.tmp`;
   fs.writeFileSync(tmp, JSON.stringify(data));
   fs.renameSync(tmp, DAILY_EST_FILE);
+}
+
+function readAiPredictions() {
+  try {
+    if (!fs.existsSync(AI_PRED_FILE)) return { version: 1, predictions: [] };
+    const raw = fs.readFileSync(AI_PRED_FILE, "utf8").replace(/^\uFEFF/, "");
+    const data = JSON.parse(raw);
+    if (!data || !Array.isArray(data.predictions)) {
+      return { version: 1, predictions: [] };
+    }
+    return data;
+  } catch {
+    return { version: 1, predictions: [] };
+  }
+}
+
+/**
+ * 用真实净值给预测对账：取 targetDate 当天（或之后最近一个交易日）的真实涨跌
+ * 返回带 actual / hit 字段的预测列表
+ */
+async function fillPredictionActuals(list, fundCode) {
+  if (!list.length) return [];
+  let points = [];
+  try {
+    points = await loadHistoryPoints(fundCode);
+  } catch {
+    points = [];
+  }
+  const byDate = new Map();
+  for (const p of points) byDate.set(dayKeyOf(p.ts), p);
+
+  return list.map((item) => {
+    const out = { ...item };
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(item.targetDate || "")) {
+      out.actual = null;
+      return out;
+    }
+    // 目标日当天或之后 10 个自然日内最近的一个真实净值日
+    const limit = new Date(`${item.targetDate}T00:00:00`);
+    limit.setDate(limit.getDate() + 10);
+    const keys = [...byDate.keys()]
+      .filter((k) => k >= item.targetDate && k <= dayKeyOf(limit.getTime()))
+      .sort();
+    const hitKey = keys[0];
+    const p = hitKey ? byDate.get(hitKey) : null;
+    if (!p || !Number.isFinite(p.nav)) {
+      out.actual = null;
+      return out;
+    }
+    const pct =
+      Number.isFinite(p.dailyPct) && p.dailyPct !== null
+        ? p.dailyPct
+        : null;
+    const dir = pct == null ? null : pct > 0 ? "up" : pct < 0 ? "down" : "flat";
+    out.actual = {
+      date: hitKey,
+      pct,
+      direction: dir,
+      hit: dir == null ? null : dir === item.direction,
+    };
+    return out;
+  });
 }
 
 /** 每次采集成功后覆盖写入当日终值（最后一次采集即当日系统估值结果） */
@@ -898,6 +961,30 @@ async function handleApi(req, res, urlPath, parsedUrl) {
       return sendJson(res, 400, { error: "invalid date" });
     }
     return sendJson(res, 200, readDay(day));
+  }
+
+  if (req.method === "GET" && urlPath === "/api/ai-predictions") {
+    const code = parsedUrl.searchParams.get("code") || "";
+    if (!/^\d{6}$/.test(code)) {
+      return sendJson(res, 400, { error: "invalid code" });
+    }
+    const store = readAiPredictions();
+    const list = store.predictions
+      .filter((p) => p && p.fundCode === code)
+      .sort((a, b) =>
+        String(a.targetDate || "").localeCompare(String(b.targetDate || ""))
+      );
+    try {
+      const predictions = await fillPredictionActuals(list, code);
+      return sendJson(res, 200, {
+        ts: Date.now(),
+        code,
+        updatedAt: store.updatedAt || null,
+        predictions,
+      });
+    } catch (e) {
+      return sendJson(res, 500, { error: e.message || String(e) });
+    }
   }
 
   if (req.method === "GET" && urlPath === "/api/holdings") {

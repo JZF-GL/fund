@@ -54,6 +54,8 @@ const state = {
   compareChart: null,
   compareRange: 30,
   compareMode: "nav",
+  guess: null,
+  guessMonth: null,
 };
 
 function isMarketView() {
@@ -73,6 +75,7 @@ function setActiveFund(id) {
   updateHistoryCharts();
   if (state.holdingsLive) renderHoldings(state.holdingsLive);
   updateCompareChart();
+  refreshGuess();
   requestAnimationFrame(() => {
     if (state.chart) state.chart.resize();
     if (state.histChartAi) state.histChartAi.resize();
@@ -514,6 +517,128 @@ async function refreshDailyEstimates() {
   } catch {
     // 静默失败，卡片显示 --
   }
+}
+
+function monthStart(d) {
+  return new Date(d.getFullYear(), d.getMonth(), 1);
+}
+
+function escAttr(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+async function refreshGuess() {
+  const fund = activeFund();
+  try {
+    const data = await fetchJson(
+      `/api/ai-predictions?code=${encodeURIComponent(fund.code)}`
+    );
+    if (fund.id !== state.activeFundId) return;
+    state.guess = data;
+    if (!state.guessMonth) state.guessMonth = monthStart(new Date());
+    renderGuessCalendar();
+  } catch (e) {
+    const stats = $("#guessStats");
+    if (stats) stats.textContent = `预测数据读取失败：${e.message || e}`;
+  }
+}
+
+function renderGuessCalendar() {
+  const grid = $("#guessCalendar");
+  const label = $("#guessMonthLabel");
+  const stats = $("#guessStats");
+  if (!grid || !label) return;
+
+  if (!state.guessMonth) state.guessMonth = monthStart(new Date());
+  const m = state.guessMonth;
+  label.textContent = `${m.getFullYear()}年${m.getMonth() + 1}月`;
+
+  const preds = (state.guess && state.guess.predictions) || [];
+  const byDate = new Map(preds.map((p) => [p.targetDate, p]));
+  const today = dayKeyOf(Date.now());
+  const dirText = { up: "涨", down: "跌", flat: "平" };
+
+  const firstWeekday =
+    (new Date(m.getFullYear(), m.getMonth(), 1).getDay() + 6) % 7; // 周一=0
+  const days = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
+
+  const cells = [];
+  for (let i = 0; i < firstWeekday; i++) {
+    cells.push(`<div class="guess-cell empty"></div>`);
+  }
+  for (let d = 1; d <= days; d++) {
+    const dt = new Date(m.getFullYear(), m.getMonth(), d);
+    const key = dayKeyOf(dt.getTime());
+    const pred = byDate.get(key);
+    const cls = ["guess-cell"];
+    if (dt.getDay() === 0 || dt.getDay() === 6) cls.push("weekend");
+    if (key === today) cls.push("today");
+
+    let inner = `<div class="g-date">${d}</div>`;
+    let tip = "";
+    if (pred) {
+      const actual = pred.actual;
+      if (actual && actual.hit != null) cls.push(actual.hit ? "hit" : "miss");
+      else cls.push("pending");
+      inner += `<div class="g-line"><span class="g-k">猜</span><span class="g-dir ${
+        pred.direction
+      }">${dirText[pred.direction] || "--"}</span><span class="g-conf">${
+        pred.confidence != null ? pred.confidence : ""
+      }</span></div>`;
+      if (actual && actual.direction) {
+        inner += `<div class="g-line"><span class="g-k">实</span><span class="g-dir ${
+          actual.direction
+        }">${dirText[actual.direction] || "--"}</span><span class="g-mark ${
+          actual.hit ? "ok" : "no"
+        }">${actual.hit ? "✓" : "✗"}</span></div>`;
+      } else {
+        inner += `<div class="g-line"><span class="g-k">实</span><span class="g-muted">待定</span></div>`;
+      }
+      tip = [pred.summary, ...(pred.reasons || [])].filter(Boolean).join("\n");
+    }
+    cells.push(
+      `<div class="${cls.join(" ")}"${
+        tip ? ` title="${escAttr(tip)}"` : ""
+      }>${inner}</div>`
+    );
+  }
+  grid.innerHTML = cells.join("");
+
+  const settled = preds.filter((p) => p.actual && p.actual.hit != null);
+  const hits = settled.filter((p) => p.actual.hit).length;
+  const acc = settled.length ? ((hits / settled.length) * 100).toFixed(0) : null;
+  const upcoming = preds
+    .filter((p) => !p.actual || p.actual.hit == null)
+    .sort((a, b) => String(a.targetDate).localeCompare(String(b.targetDate)))[0];
+
+  const parts = [];
+  if (settled.length) {
+    parts.push(`已结算 ${settled.length} 天 · 命中 ${hits} · ${acc}%`);
+  } else {
+    parts.push("暂无已结算预测");
+  }
+  if (upcoming) {
+    parts.push(
+      `下一次：${upcoming.targetDate} 猜${
+        dirText[upcoming.direction] || "--"
+      }（${upcoming.confidence != null ? upcoming.confidence : "--"}%）`
+    );
+  }
+  if (stats) stats.textContent = parts.join(" · ");
+}
+
+function bindGuessMonthNav() {
+  const shift = (n) => {
+    const cur = state.guessMonth || monthStart(new Date());
+    state.guessMonth = new Date(cur.getFullYear(), cur.getMonth() + n, 1);
+    renderGuessCalendar();
+  };
+  $("#guessPrev")?.addEventListener("click", () => shift(-1));
+  $("#guessNext")?.addEventListener("click", () => shift(1));
 }
 
 function buildCompareRows(fundId) {
@@ -1022,6 +1147,7 @@ async function refreshData() {
     updateCountdown();
     refreshHoldingsLive();
     refreshDailyEstimates();
+    refreshGuess();
   } catch (e) {
     setStatus(`读取失败：${e.message || e}`, false);
   }
@@ -1104,6 +1230,7 @@ function main() {
     bindHistTabs();
     bindCompareRangeTabs();
     bindCompareModeTabs();
+    bindGuessMonthNav();
     renderLegend();
     initChart();
     applyViewVisibility();
@@ -1116,6 +1243,7 @@ function main() {
     refreshData();
     refreshHistory();
     refreshDailyEstimates();
+    refreshGuess();
     connectStream();
   } catch (e) {
     setStatus(`初始化失败: ${e.message || e}`, false);

@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "predictions": [
+    {
+      "fundId": "ai",
+      "fundCode": "012734",
+      "predictDate": "2026-11-02",
+      "targetDate": "2026-11-03",
+      "direction": "down",
+      "confidence": 56,
+      "summary": "AI 硬件隔夜承压，反弹难持续",
+      "reasons": [
+        "10/30 费城半导体指数 -7%、纳指 -2%，AI 硬件隔夜情绪偏空",
+        "今日估算 +1.40%，但前三大权重寒武纪 -2.16%、新易盛 -2.31%、中际旭创 -0.54%，龙头未跟涨",
+        "收盘 1.5565 仍在 MA5 1.6562 / MA10 1.6802 / MA20 1.7488 下方，近5日 -10.53%",
+        "创业板盘中一度 +3.5%、收盘 +1.87%，冲高回落显示获利盘压力"
+      ],
+      "sources": [
+        "https://www.tradingkey.com/zh-hans/analysis/stocks/us-stock/262261120-us-stocks-plunge-intel-nasdaq-what-reasons-prices-to-drop-tradingkey",
+        "http://stock.10jqka.com.cn/20261102/c681351576.shtml"
+      ],
+      "model": "opencode",
+      "createdAt": 1793610398160
+    },
+    {
+      "fundId": "nev",
+      "fundCode": "011513",
+      "predictDate": "2026-11-02",
+      "targetDate": "2026-11-03",
+      "direction": "up",
+      "confidence": 58,
+      "summary": "锂电龙头放量修复，超跌反弹延续",
+      "reasons": [
+        "今日估算 +1.72%，持仓 56 涨 / 8 跌，比亚迪 +3.06%、宁德时代 +3.12%",
+        "宁德时代换电+欧洲储能双突破，低估值电池产业链走强",
+        "国信证券：锂电三季报动储电池出货同比多超 50%，基本面持续修复",
+        "两市成交 1.78 万亿、放量 1092 亿，超 4600 股上涨，风险偏好回升",
+        "仍在 MA5 0.8838 / MA10 0.8863 下方，近5日 -3.63%，反弹仍需确认"
+      ],
+      "sources": [
+        "https://m.jrj.com.cn/madapter/fund/2026/11/02112358972213.shtml",
+        "http://stock.10jqka.com.cn/20261102/c681350845.shtml"
+      ],
+      "model": "opencode",
+      "createdAt": 1793610398218
+    }
+  ],
+  "updatedAt": 1793610398219
+}

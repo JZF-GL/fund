@@ -572,6 +572,26 @@ td.empty {
 }
 
 /* 猜次日涨跌日历 */
+.chart-title-group {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.guess-acc {
+  font-size: 12px;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 10px;
+  white-space: nowrap;
+}
+
+.guess-acc b {
+  font-weight: 700;
+}
+
 .guess-month {
   min-width: 78px;
   text-align: center;

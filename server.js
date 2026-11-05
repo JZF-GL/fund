@@ -30,9 +30,13 @@ const FUNDS = [
     lastNavDate: "2026-09-22",
     // 联接基金自身直接股票仓位极低，用标的 ETF 159819 持仓穿透
     holdingsSource: "159819",
-    // 联接基金对标的 ETF 仓位近似（留少量现金）
+    // 联接基金持有标的 ETF 的比例（19 个交易日回归得 0.9499，四舍五入 0.95）
     holdingsScale: 0.95,
     holdingsEquity: 1,
+    // 联接基金净值 = 0.95 × 标的 ETF 净值涨跌（近 19 日回归 MAE 0.024pp）；
+    // 主锚改为 ETF 的 IOPV（申赎清单实时净值），保留 10% 持仓权重做交叉校验
+    etfBlend: 0.9,
+    indexBeta: 0.95,
     // 持仓加权作为主估值，指数/ETF 仅作对比
     preferHoldings: true,
   },
@@ -411,6 +415,9 @@ function parseTencentBody(text) {
     pct: Number.isFinite(pct) ? pct : ((price - prevClose) / prevClose) * 100,
     price,
     prevClose,
+    // ETF 专用：78=IOPV（实时净值估算），81=最新单位净值（盘中即前一交易日净值）
+    iopv: Number.isFinite(Number(p[78])) && Number(p[78]) > 0 ? Number(p[78]) : null,
+    nav: Number.isFinite(Number(p[81])) && Number(p[81]) > 0 ? Number(p[81]) : null,
     digits,
     quoteName,
     time,
@@ -563,15 +570,35 @@ function evaluateFundEstimate(fund, stockQuotes, indexQuote) {
     });
   }
 
-  const indexPct = indexQuote && Number.isFinite(indexQuote.pct)
-    ? Number(indexQuote.pct.toFixed(4))
-    : null;
+  // ETF 的 IOPV（交易所实时净值）÷ 上一交易日单位净值，可剔除场内折溢价的干扰
+  const iopvPct =
+    indexQuote && indexQuote.iopv != null && indexQuote.nav != null
+      ? Number(((indexQuote.iopv / indexQuote.nav - 1) * 100).toFixed(4))
+      : null;
+  const rawIndexPct =
+    iopvPct != null
+      ? iopvPct
+      : indexQuote && Number.isFinite(indexQuote.pct)
+        ? Number(indexQuote.pct.toFixed(4))
+        : null;
+  const indexBeta = Number(fund.indexBeta);
+  const indexPct =
+    rawIndexPct != null
+      ? Number((rawIndexPct * (Number.isFinite(indexBeta) ? indexBeta : 1)).toFixed(4))
+      : null;
 
   let primary = null;
   let method = null;
   if (fund.preferHoldings && holdingsEst && holdingsEst.ok && Number.isFinite(holdingsEst.pct)) {
     primary = holdingsEst.pct;
     method = "holdings";
+    // 联接基金：持仓权重来自季报截面，存在漂移；与标的 ETF 实时涨幅融合可显著降误差
+    const blend = Number(fund.etfBlend);
+    if (Number.isFinite(blend) && blend > 0 && indexPct != null) {
+      const w = Math.min(1, Math.max(0, blend));
+      primary = Number(((1 - w) * holdingsEst.pct + w * indexPct).toFixed(4));
+      method = "blend";
+    }
   } else if (indexPct != null) {
     primary = indexPct;
     method = "index";
@@ -668,7 +695,7 @@ async function collectOnce({ broadcastUpdate = true } = {}) {
         continue;
       }
 
-      if (est.method === "holdings") holdingsUsed += 1;
+      if (est.method === "holdings" || est.method === "blend") holdingsUsed += 1;
       const baseNavInfo = baseNavMap[fund.id] || {
         nav: fund.lastNav,
         date: fund.lastNavDate,
@@ -676,7 +703,12 @@ async function collectOnce({ broadcastUpdate = true } = {}) {
       values[fund.id] = est.pct;
       detail[fund.id] = {
         method: est.method,
-        methodLabel: est.method === "holdings" ? "持仓加权" : "跟踪标的",
+        methodLabel:
+          est.method === "blend"
+            ? "持仓+ETF融合"
+            : est.method === "holdings"
+              ? "持仓加权"
+              : "跟踪标的",
         pct: est.pct,
         indexPct: est.indexPct,
         holdingsPct: est.holdings ? est.holdings.pct : null,

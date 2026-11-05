@@ -11,7 +11,7 @@
   <header class="header">
     <div class="header-left">
       <h1>技术学习</h1>
-      <p class="sub">SSE 实时推送 · 持仓加权主估值 · 指数/ETF 对比参考 · 后端落盘 · 每 3 分钟采集</p>
+      <p class="sub">SSE 实时推送 · 持仓加权为主 + ETF 融合校正 · 后端落盘 · 每 3 分钟采集</p>
     </div>
     <div class="header-right">
       <div class="theme-switch" id="themeSwitch">
@@ -94,7 +94,10 @@
 
     <section class="chart-panel" id="guessPanel">
       <div class="chart-header">
-        <h2>猜次日涨跌日历</h2>
+        <div class="chart-title-group">
+          <h2>猜次日涨跌日历</h2>
+          <span class="guess-acc" id="guessAcc30" title="统计目标日在最近 30 个工作日内的已结算预测">近30个工作日：--</span>
+        </div>
         <div class="chart-tools">
           <div class="muted" id="guessStats">加载中...</div>
           <div class="range-tabs">

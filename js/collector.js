@@ -123,6 +123,19 @@ function dayKeyOf(ts) {
   return `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
 }
 
+// 以今天为起点前后平移 n 个工作日（周一~周五），n 为负表示往前
+function shiftWorkdays(ts, n) {
+  const d = new Date(ts);
+  let left = Math.abs(n);
+  const step = n < 0 ? -1 : 1;
+  while (left > 0) {
+    d.setDate(d.getDate() + step);
+    const wd = d.getDay();
+    if (wd !== 0 && wd !== 6) left -= 1;
+  }
+  return d;
+}
+
 function formatTime(ts) {
   const d = new Date(ts);
   return `${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`;
@@ -377,6 +390,15 @@ function renderHistoryChart(chart, fund, points) {
           if (row) {
             lines.push(`单位净值：${row.nav}`);
             if (row.dailyPct != null) lines.push(`日涨幅：${formatPct(row.dailyPct)}`);
+            // 该日收盘买入、持有到最新收盘（通常是昨天）的涨跌幅
+            const lastRow = sliced[sliced.length - 1];
+            if (lastRow && idx < sliced.length - 1 && row.nav > 0) {
+              const hold = (lastRow.nav / row.nav - 1) * 100;
+              const lastLabel = dates[dates.length - 1].slice(5);
+              lines.push(
+                `持有至 ${lastLabel}：<span class="${textClass(hold)}">${formatPct(hold)}</span>`
+              );
+            }
           }
           lines.push(`区间累计：${formatPct(params[0].value)}`);
           return lines.join("<br/>");
@@ -611,13 +633,28 @@ function renderGuessCalendar() {
   const settled = preds.filter((p) => p.actual && p.actual.hit != null);
   const hits = settled.filter((p) => p.actual.hit).length;
   const acc = settled.length ? ((hits / settled.length) * 100).toFixed(0) : null;
+
+  // 近 30 个工作日内的准确率（按目标日统计）
+  const accEl = $("#guessAcc30");
+  if (accEl) {
+    const cutoffKey = dayKeyOf(shiftWorkdays(Date.now(), -30).getTime());
+    const recent = settled.filter((p) => String(p.targetDate) >= cutoffKey);
+    const recentHits = recent.filter((p) => p.actual.hit).length;
+    if (!recent.length) {
+      accEl.textContent = "近30个工作日：暂无已结算";
+    } else {
+      const rate = ((recentHits / recent.length) * 100).toFixed(0);
+      accEl.innerHTML = `近30个工作日：命中 <b>${recentHits}/${recent.length}</b> · ${rate}%`;
+    }
+  }
+
   const upcoming = preds
     .filter((p) => !p.actual || p.actual.hit == null)
     .sort((a, b) => String(a.targetDate).localeCompare(String(b.targetDate)))[0];
 
   const parts = [];
   if (settled.length) {
-    parts.push(`已结算 ${settled.length} 天 · 命中 ${hits} · ${acc}%`);
+    parts.push(`累计已结算 ${settled.length} 天 · 命中 ${hits} · ${acc}%`);
   } else {
     parts.push("暂无已结算预测");
   }

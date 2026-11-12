@@ -14,6 +14,8 @@ body[data-theme="purple"] {
   --line-1: #6b4c9a;
   --line-2: #4a6b8a;
   --line-3: #8b6a5a;
+  --ma-10: #c9a45c;
+  --ma-20: #6fa8a0;
   --btn: #6b4c9a;
   --btn-hover: #7d5cb0;
   --radius: 14px;
@@ -35,6 +37,8 @@ body[data-theme="slate"] {
   --line-1: #3d5a7a;
   --line-2: #4a6b5a;
   --line-3: #6a5a4a;
+  --ma-10: #bfa06a;
+  --ma-20: #6f9a92;
   --btn: #3d5a7a;
   --btn-hover: #4d6a8a;
   --radius: 14px;
@@ -444,6 +448,24 @@ body {
   font-weight: 600;
   margin-bottom: 4px;
   padding-left: 2px;
+}
+
+.ma-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  vertical-align: middle;
+}
+
+.ma-legend i {
+  display: inline-block;
+  width: 12px;
+  height: 2px;
+  border-radius: 1px;
 }
 
 .history-chart {

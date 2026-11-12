@@ -172,7 +172,178 @@
       ],
       "model": "opencode",
       "createdAt": 1793860812106
+    },
+    {
+      "fundId": "ai",
+      "fundCode": "012734",
+      "predictDate": "2026-11-06",
+      "targetDate": "2026-11-09",
+      "direction": "up",
+      "confidence": 54,
+      "summary": "恐慌缺口回补+纳指期货转涨，超跌反弹概率占优",
+      "reasons": [
+        "今日估算 -3.87%（净值约 1.579），盘中最低 -4.93%、最高 -2.26%，低开高走后未再破低，恐慌盘已被消化",
+        "159819 收盘 IOPV 1.3595 正好回踩 MA5 1.3631，尚未有效跌破；近 43 次单日跌超 4% 后次日上涨 58%、中位 +0.54%",
+        "15:04 纳指期货 +0.75%、标普期货基本持平，费半暴跌 12.25% 后出现技术性修复，外围情绪边际缓和",
+        "创业板今日低开 4.99% 收 -3.96%，上证低开 2.11% 收 -1.10%，长下影说明有资金承接",
+        "风险：美国数据中心审批收紧是中期利空，若今晚非农后美股再跳水，反弹会落空，故仅给 54%"
+      ],
+      "sources": [
+        "https://www.163.com/tech/article/LB1PJPRT00097U7T.html",
+        "https://www.163.com/dy/article/LB24LK2505198NMR.html"
+      ],
+      "model": "opencode",
+      "createdAt": 1793948699763
+    },
+    {
+      "fundId": "nev",
+      "fundCode": "011513",
+      "predictDate": "2026-11-06",
+      "targetDate": "2026-11-09",
+      "direction": "up",
+      "confidence": 56,
+      "summary": "趋势未破+相对抗跌，超跌反弹看新能源接力",
+      "reasons": [
+        "今日估算 -2.45%（净值约 0.9241），跌幅明显小于创业板 -3.96%，1 涨 64 跌属于普跌而非板块崩塌",
+        "估算净值 0.9241 仍在 MA5 0.9004、MA10 0.8954、MA20 0.9077 上方，日线上升结构完整",
+        "中证新能源汽车指数单日跌超 2.5% 后，次日上涨概率 53%、均值 +0.26%；本次 -2.41% 接近该阈值",
+        "政策面：IRA 清洁能源抵免恢复预期、国内新型储能装机同比 +63%，回调提供上车窗口",
+        "风险：今日收在日内低位、尾盘无抢筹；若周一风险偏好继续收缩，新能源可能补跌"
+      ],
+      "sources": [
+        "https://www.163.com/dy/article/KO7UBLE205568V7Z.html",
+        "https://finance.cnr.cn/gundong/20261105/t20261105_527863228.shtml"
+      ],
+      "model": "opencode",
+      "createdAt": 1793948699822
+    },
+    {
+      "fundId": "ai",
+      "fundCode": "012734",
+      "predictDate": "2026-11-09",
+      "targetDate": "2026-11-10",
+      "direction": "up",
+      "confidence": 54,
+      "summary": "美股芯片修复+权重股回暖，A股算力补涨",
+      "reasons": [
+        "今日估算 +0.73%（净值约 1.5934），在创业板 -0.27% 的背景下逆势收红，159819 +0.81% 重新站上 MA5 1.370",
+        "隔夜费半 +4.21%、英伟达 +2.78%、台积电 +6.33%，AI 硬件情绪从周四的暴跌中明显修复",
+        "持仓 24 涨 29 跌但权重股回暖：寒武纪 +6.02%、新易盛 +2.27%、海光 +1.26%，科创50 +0.30% 站上 MA5/MA10",
+        "风险：尾盘从 +1.07% 回落到 +0.73%，159819 仍在 MA10 1.38 下方，若今晚美股对周五反弹获利了结，补涨会中断"
+      ],
+      "sources": [
+        "https://finance.eastmoney.com/a/202611093926129444.html",
+        "https://tags.sina.com.cn/finance_agu"
+      ],
+      "model": "opencode",
+      "createdAt": 1794209080725
+    },
+    {
+      "fundId": "nev",
+      "fundCode": "011513",
+      "predictDate": "2026-11-09",
+      "targetDate": "2026-11-10",
+      "direction": "down",
+      "confidence": 53,
+      "summary": "碳酸锂跌破 9 万，锂电承压、弱于大盘",
+      "reasons": [
+        "今日估算 -1.38%（净值约 0.9124），碳酸锂主力合约日内 -4% 报 88200 元/吨，锂价下行直接压制板块估值",
+        "持仓仅 14 涨 51 跌：亿纬锂能 -6.75%（今日 3443.74 万股限售解禁）、宁德 -2.19%、赣锋 -2.93%",
+        "中证新能车指数 -1.42% 跌破 MA5 2156.66，收在日内低位，明显弱于创业板 -0.27%",
+        "基本面：11 月电池排产预计环比 -5%，碳酸锂「强现实、弱预期」的宽松叙事仍在发酵",
+        "反面：估算净值 0.9124 仍在 MA10 0.898、MA20 0.9044 上方，两连阴后次日上涨概率 52%，故只给 53%"
+      ],
+      "sources": [
+        "https://www.cls.cn/detail/2528789",
+        "https://www.163.com/dy/article/LB9HI54G0519D45U.html"
+      ],
+      "model": "opencode",
+      "createdAt": 1794209080782
+    },
+    {
+      "fundId": "ai",
+      "fundCode": "012734",
+      "predictDate": "2026-11-10",
+      "targetDate": "2026-11-11",
+      "direction": "up",
+      "confidence": 54,
+      "summary": "全球AI硬件共振，均线修复延续",
+      "reasons": [
+        "今日估算 +1.46%（净值约 1.617），159819 +1.61% 报 1.391，收盘站上 MA5 1.5928 与 MA10 1.6113",
+        "隔夜费半 +6.85%、纳指 +2.74%，Coherent +16.8%、Lumentum +10.7%，光通信链带领 AI 硬件修复",
+        "持仓 40 涨 13 跌，新易盛 +4.09%、中际旭创 +4.00%、澜起 +3.23%，权重股集体回暖",
+        "风险：159819 盘中最高 1.411 后回落至 1.391，估算从 +2.09% 收敛到 +1.46%，今晚美国 10 月 CPI 是变量"
+      ],
+      "sources": [
+        "https://finance.eastmoney.com/a/202611103927165029.html",
+        "https://www.21jingji.com/article/20261110/herald/d4d9486e14b7a2f8ef0ee2732f45812b.html"
+      ],
+      "model": "opencode",
+      "createdAt": 1794293342620
+    },
+    {
+      "fundId": "nev",
+      "fundCode": "011513",
+      "predictDate": "2026-11-10",
+      "targetDate": "2026-11-11",
+      "direction": "down",
+      "confidence": 54,
+      "summary": "锂价再跌、跑输大盘，弱势延续",
+      "reasons": [
+        "今日估算仅 +0.18%（净值约 0.9144），515030 +0.15% 近日内低点，创业板 +1.25% 明显跑输",
+        "碳酸锂现货 11-10 报 92500 元/吨，较 11-09 的 94500 再跌 2000；期货主力 11-09 收 88660（-3.57%）失守 9 万",
+        "10 月新能源车零售同比 -13.7%、渗透率 67.8%，11 月电池排产预计环比 -5%，需求端仍偏弱",
+        "反面：净值 0.9144 仍在 MA10 0.8992、MA20 0.9014 上方，持仓 41 涨 23 跌，跌幅受限，故只给 54%"
+      ],
+      "sources": [
+        "https://www.100ppi.com/cindex/k-list-733.html",
+        "https://city.sina.com.cn/city_finance/2026-11-09/detail-iniycmtw2980037.shtml"
+      ],
+      "model": "opencode",
+      "createdAt": 1794293342681
+    },
+    {
+      "fundId": "ai",
+      "fundCode": "012734",
+      "predictDate": "2026-11-11",
+      "targetDate": "2026-11-12",
+      "direction": "up",
+      "confidence": 55,
+      "summary": "算力硬件加速，趋势延续但防CPI扰动",
+      "reasons": [
+        "今日估算 +3.43%（净值约 1.6751），159819 +3.44% 报 1.442 收在日内最高，站上 MA5/MA10/MA20",
+        "算力硬件午后加速：新易盛 +16.97%、中际旭创 +15.07%、寒武纪 +7.40%，创业板 +3.11%、科创50 +2.80%",
+        "中国移动 2027 年算力投资超 1000 亿、谷歌 TPU 8tx/8i Max、Anthropic IPO 路演，国内算力资本开支叙事强化",
+        "风险：美国 10 月 CPI 环比 +0.4% 超预期、12 月加息预期升温，英伟达两日累跌 7.8%，高位科技股仍有波动"
+      ],
+      "sources": [
+        "https://www.cls.cn/detail/2531186",
+        "https://www.tradingkey.com/zh-hans/analysis/stocks/us-stock/262299536-us-october-cpi-tops-forecasts-nasdaq-falls-nvidia-stock-drops-tradingkey"
+      ],
+      "model": "opencode",
+      "createdAt": 1794380781379
+    },
+    {
+      "fundId": "nev",
+      "fundCode": "011513",
+      "predictDate": "2026-11-11",
+      "targetDate": "2026-11-12",
+      "direction": "down",
+      "confidence": 56,
+      "summary": "锂价续跌、资金分流，弱势难改",
+      "reasons": [
+        "今日估算仅 +0.04%，中证新能车 -0.17%，在创业板 +3.11% 的强势日里严重跑输，515030 -0.44%",
+        "碳酸锂现货 11-10 报 91300 元/吨继续走低，期货 2704/2707 今日跌 1.8%~2.2%，11 月全球电池产量预计环比 -4.7%",
+        "权重股走弱：比亚迪 -2.84%、宁德 -1.32%、汇川 -1.34%，资金明显转向算力",
+        "反面：净值 0.9156 仍在 MA10 0.9025、MA20 0.8998 上方，持仓 38 涨 25 跌，跌幅或有限，故给 56%"
+      ],
+      "sources": [
+        "https://quote.eastmoney.com/qihuo/lcm.html",
+        "https://www.jwview.com/jingwei/html/m/11-11/696517.shtml"
+      ],
+      "model": "opencode",
+      "createdAt": 1794380781450
     }
   ],
-  "updatedAt": 1793860812107
+  "updatedAt": 1794380781452
 }

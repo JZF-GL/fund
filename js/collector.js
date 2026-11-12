@@ -366,10 +366,31 @@ function renderHistoryChart(chart, fund, points) {
   const seriesData = sliced.map((p) =>
     base > 0 ? Number((((p.nav / base) - 1) * 100).toFixed(4)) : null
   );
+
+  // MA10 / MA20 用完整历史计算（区间起点前也需要预热），再换算成同一「区间累计」坐标
+  const startIdx = Math.max(0, points.indexOf(sliced[0]));
+  const prefix = [0];
+  for (const p of points) {
+    const nav = Number(p.nav);
+    prefix.push(prefix[prefix.length - 1] + (Number.isFinite(nav) ? nav : 0));
+  }
+  const buildMa = (n) =>
+    sliced.map((_, i) => {
+      const fi = startIdx + i;
+      if (fi < n - 1 || !(base > 0)) return null;
+      const ma = (prefix[fi + 1] - prefix[fi + 1 - n]) / n;
+      return Number((((ma / base) - 1) * 100).toFixed(4));
+    });
+  const ma10Data = buildMa(10);
+  const ma20Data = buildMa(20);
+
   const ret = seriesData[seriesData.length - 1];
   const titleEl = document.getElementById(fund.id === "ai" ? "histTitleAi" : "histTitleNev");
   if (titleEl) {
-    titleEl.innerHTML = `${fund.name} <span class="${textClass(ret)}" style="font-weight:700;margin-left:8px">${formatPct(ret)}</span>`;
+    titleEl.innerHTML =
+      `${fund.name} <span class="${textClass(ret)}" style="font-weight:700;margin-left:8px">${formatPct(ret)}</span>` +
+      `<span class="ma-legend"><i style="background:${cssVar("--ma-10")}"></i>MA10</span>` +
+      `<span class="ma-legend"><i style="background:${cssVar("--ma-20")}"></i>MA20</span>`;
   }
 
   chart.setOption(
@@ -383,8 +404,9 @@ function renderHistoryChart(chart, fund, points) {
         textStyle: { color: "#e7edf3" },
         formatter: (params) => {
           if (!params || !params.length) return "";
-          const dateStr = params[0].axisValue;
-          const idx = params[0].dataIndex;
+          const main = params.find((p) => p.seriesName === "区间累计涨幅") || params[0];
+          const dateStr = main.axisValue;
+          const idx = main.dataIndex;
           const row = sliced[idx];
           const lines = [`<div style="margin-bottom:4px">${dateStr}</div>`];
           if (row) {
@@ -400,7 +422,15 @@ function renderHistoryChart(chart, fund, points) {
               );
             }
           }
-          lines.push(`区间累计：${formatPct(params[0].value)}`);
+          lines.push(`区间累计：${formatPct(main.value)}`);
+          const ma10 = params.find((p) => p.seriesName === "MA10");
+          const ma20 = params.find((p) => p.seriesName === "MA20");
+          if (ma10 && ma10.value != null) {
+            lines.push(`<span style="color:${cssVar("--ma-10")}">MA10：${formatPct(ma10.value)}</span>`);
+          }
+          if (ma20 && ma20.value != null) {
+            lines.push(`<span style="color:${cssVar("--ma-20")}">MA20：${formatPct(ma20.value)}</span>`);
+          }
           return lines.join("<br/>");
         },
       },
@@ -443,6 +473,30 @@ function renderHistoryChart(chart, fund, points) {
             label: { show: false },
           },
           data: seriesData,
+        },
+        {
+          name: "MA10",
+          type: "line",
+          smooth: false,
+          showSymbol: false,
+          connectNulls: false,
+          lineStyle: { width: 1.4, color: cssVar("--ma-10"), opacity: 0.9 },
+          itemStyle: { color: cssVar("--ma-10") },
+          emphasis: { disabled: true },
+          z: 3,
+          data: ma10Data,
+        },
+        {
+          name: "MA20",
+          type: "line",
+          smooth: false,
+          showSymbol: false,
+          connectNulls: false,
+          lineStyle: { width: 1.4, color: cssVar("--ma-20"), opacity: 0.9 },
+          itemStyle: { color: cssVar("--ma-20") },
+          emphasis: { disabled: true },
+          z: 3,
+          data: ma20Data,
         },
       ],
     },

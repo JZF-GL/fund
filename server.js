@@ -13,8 +13,7 @@ const ROOT = __dirname;
 const DATA_DIR = path.join(ROOT, "data");
 const DAILY_EST_FILE = path.join(DATA_DIR, "daily-estimates.json");
 const AI_PRED_FILE = path.join(DATA_DIR, "ai-predictions.json");
-const KEEP_DAYS = 30;
-const KEEP_DAILY_EST_DAYS = 400;
+// 日采集文件与每日估值均长期保留，不做滚动清理
 const REFRESH_MS = 3 * 60 * 1000;
 
 const FUNDS = [
@@ -270,12 +269,6 @@ function saveDailyCloseEstimate(dayKey, values, detail, timeLabel) {
     funds,
   };
 
-  const keys = Object.keys(store.days).sort();
-  if (keys.length > KEEP_DAILY_EST_DAYS) {
-    for (const k of keys.slice(0, keys.length - KEEP_DAILY_EST_DAYS)) {
-      delete store.days[k];
-    }
-  }
   writeDailyEstimates(store);
 }
 
@@ -344,21 +337,6 @@ function listDays() {
       .sort();
   } catch {
     return [];
-  }
-}
-
-function pruneOldDays(keepDayKey) {
-  try {
-    const days = listDays();
-    if (days.length <= KEEP_DAYS) return;
-    days.slice(0, days.length - KEEP_DAYS).forEach((day) => {
-      if (day !== keepDayKey) {
-        const file = dataFile(day);
-        if (fs.existsSync(file)) fs.unlinkSync(file);
-      }
-    });
-  } catch {
-    // ignore
   }
 }
 
@@ -758,7 +736,6 @@ async function collectOnce({ broadcastUpdate = true } = {}) {
     day.date = dayKey;
     day.updatedAt = now;
     writeDay(dayKey, day);
-    pruneOldDays(dayKey);
     try {
       saveDailyCloseEstimate(dayKey, values, detail, timeLabel);
     } catch {

@@ -24,7 +24,6 @@ const path = require("path");
 const ROOT = path.resolve(__dirname, "..");
 const DATA_DIR = path.join(ROOT, "data");
 const FILE = path.join(DATA_DIR, "ai-predictions.json");
-const KEEP = 400;
 
 const FUND_ID_BY_CODE = {
   "012734": "ai",
@@ -144,9 +143,6 @@ function main() {
   store.predictions.sort((a, b) =>
     String(a.targetDate).localeCompare(String(b.targetDate))
   );
-  if (store.predictions.length > KEEP) {
-    store.predictions = store.predictions.slice(-KEEP);
-  }
   store.version = 1;
   store.updatedAt = Date.now();
 

@@ -42,6 +42,9 @@ const state = {
   nextAt: Date.now() + FALLBACK_MS,
   status: null,
   dayKey: dayKeyOf(Date.now()),
+  liveDay: null,
+  viewDate: dayKeyOf(Date.now()),
+  days: [],
   es: null,
   connected: false,
   lastPushAt: null,
@@ -183,18 +186,31 @@ async function fetchJson(url, options) {
 }
 
 function lastPoint() {
+  // 卡片始终展示「今天」的最新数据，与图表回看的日期解耦
+  const today = dayKeyOf(Date.now());
+  if (state.liveDay && state.liveDay.date === today) {
+    const pts = Array.isArray(state.liveDay.points) ? state.liveDay.points : [];
+    return pts[pts.length - 1] || null;
+  }
   return state.points[state.points.length - 1] || null;
+}
+
+function isReplaying() {
+  return state.viewDate !== dayKeyOf(Date.now());
 }
 
 function applyDay(day) {
   if (!day) return;
-  const nextKey = dayKeyOf(day.updatedAt || Date.now());
-  if (nextKey !== state.dayKey) {
-    state.dayKey = nextKey;
-    state.points = [];
+  const today = dayKeyOf(Date.now());
+  const key = day.date || dayKeyOf(day.updatedAt || Date.now());
+  // 今天的实时数据永远缓存一份，供「回到今天」即时展示
+  if (key === today) state.liveDay = day;
+  // 只有正在看的日期才覆盖画面，回看历史时不被实时推送打断
+  if (state.viewDate === key) {
+    state.dayKey = key;
+    state.points = Array.isArray(day.points) ? day.points : [];
+    if (day.updatedAt) state.updatedAt = day.updatedAt;
   }
-  if (Array.isArray(day.points)) state.points = day.points;
-  if (day.updatedAt) state.updatedAt = day.updatedAt;
 }
 
 function applyStatus(status) {
@@ -999,13 +1015,19 @@ function bindHistTabs() {
 function updateChart() {
   if (!state.chart || isMarketView()) return;
 
+  updateModeBadge();
   const fund = activeFund();
   const points = state.points.filter((p) => inSession(p.ts));
   const hasData = points.length > 0;
   const chartEl = $("#chart");
   const emptyEl = $("#chartEmpty");
   if (chartEl) chartEl.style.display = hasData ? "block" : "none";
-  if (emptyEl) emptyEl.style.display = hasData ? "none" : "block";
+  if (emptyEl) {
+    emptyEl.style.display = hasData ? "none" : "block";
+    emptyEl.textContent = isReplaying()
+      ? `${state.viewDate} 没有采集记录（非交易日或当日未开盘采集）`
+      : "暂无后端记录，交易日 9:30 后每 3 分钟写入 data/*.json...";
+  }
 
   const { start, end } = sessionRangeOf(state.updatedAt || Date.now());
   const series = [
@@ -1158,6 +1180,82 @@ function setStatus(text, ok) {
   if (ok === false) el.classList.add("err");
 }
 
+function updateModeBadge() {
+  const badge = $("#intradayMode");
+  if (!badge) return;
+  const replay = isReplaying();
+  badge.textContent = replay ? `历史回看 ${state.viewDate}` : "实时";
+  badge.classList.toggle("replay", replay);
+  const back = $("#backToToday");
+  if (back) back.hidden = !replay;
+}
+
+function renderDayPicker() {
+  const sel = $("#dayPicker");
+  const today = dayKeyOf(Date.now());
+  const cur = state.viewDate || today;
+  if (sel) {
+    const days = Array.from(new Set([...(state.days || []), today]))
+      .sort()
+      .reverse();
+    sel.innerHTML = days
+      .map((d) => {
+        const label = d === today ? `${d}（今天 · 实时）` : d;
+        return `<option value="${d}"${d === cur ? " selected" : ""}>${label}</option>`;
+      })
+      .join("");
+  }
+  updateModeBadge();
+}
+
+async function refreshDayList() {
+  try {
+    const data = await fetchJson("/api/days");
+    state.days = Array.isArray(data.days) ? data.days : [];
+  } catch {
+    state.days = state.days || [];
+  }
+  renderDayPicker();
+}
+
+async function switchDay(date) {
+  if (!date) return;
+  const today = dayKeyOf(Date.now());
+  state.viewDate = date;
+  if (date === today) {
+    if (state.liveDay) {
+      applyDay(state.liveDay);
+    } else {
+      state.viewDate = today;
+      await refreshData();
+      return;
+    }
+  } else {
+    try {
+      const day = await fetchJson(`/api/day?date=${encodeURIComponent(date)}`);
+      applyDay(day && Array.isArray(day.points) ? day : { date, points: [] });
+    } catch (e) {
+      state.points = [];
+      state.updatedAt = null;
+      setStatus(`读取 ${date} 失败：${e.message || e}`, false);
+    }
+  }
+  renderDayPicker();
+  renderAll();
+  requestAnimationFrame(() => {
+    if (state.chart) state.chart.resize();
+  });
+}
+
+function bindDayPicker() {
+  $("#dayPicker")?.addEventListener("change", (ev) => {
+    switchDay(ev.target.value);
+  });
+  $("#backToToday")?.addEventListener("click", () => {
+    switchDay(dayKeyOf(Date.now()));
+  });
+}
+
 function renderAll() {
   renderCards();
   updateChart();
@@ -1227,15 +1325,16 @@ function connectStream() {
 async function refreshData() {
   setStatus("读取服务端...");
   try {
-    const dayKey = dayKeyOf(Date.now());
+    const targetDate = state.viewDate || dayKeyOf(Date.now());
     const [day, status] = await Promise.all([
-      fetchJson(`/api/day?date=${dayKey}`),
+      fetchJson(`/api/day?date=${targetDate}`),
       fetchJson("/api/status"),
     ]);
     applyDay(day);
     applyStatus(status);
     renderAll();
     updateCountdown();
+    refreshDayList();
     refreshHoldingsLive();
     refreshDailyEstimates();
     refreshGuess();
@@ -1322,6 +1421,7 @@ function main() {
     bindCompareRangeTabs();
     bindCompareModeTabs();
     bindGuessMonthNav();
+    bindDayPicker();
     renderLegend();
     initChart();
     applyViewVisibility();
@@ -1335,6 +1435,7 @@ function main() {
     refreshHistory();
     refreshDailyEstimates();
     refreshGuess();
+    refreshDayList();
     connectStream();
   } catch (e) {
     setStatus(`初始化失败: ${e.message || e}`, false);

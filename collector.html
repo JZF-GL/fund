@@ -56,8 +56,15 @@
 
     <section class="chart-panel" id="fundIntradayPanel">
       <div class="chart-header">
-        <h2>后端记录走势（9:30 - 15:00）</h2>
-        <div class="legend" id="legend"></div>
+        <div class="chart-title-group">
+          <h2>后端记录走势（9:30 - 15:00）</h2>
+          <span class="mode-badge" id="intradayMode">实时</span>
+        </div>
+        <div class="chart-tools">
+          <select id="dayPicker" class="day-select" aria-label="选择回看的交易日"></select>
+          <button type="button" class="btn btn-ghost btn-sm" id="backToToday" hidden>回到今天</button>
+          <div class="legend" id="legend"></div>
+        </div>
       </div>
       <div id="chart" class="chart"></div>
       <div class="chart-empty" id="chartEmpty">暂无后端记录，交易日 9:30 后每 3 分钟写入 data/*.json...</div>

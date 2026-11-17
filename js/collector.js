@@ -20,6 +20,15 @@ const FUNDS = [
     lastNav: 1.0172,
     lastNavDate: "2026-09-22",
   },
+  {
+    id: "mfg",
+    name: "中欧制造升级混合发起C",
+    code: "024648",
+    refName: "主动管理 · 汽车零部件/制造升级",
+    colorVar: "--line-3",
+    lastNav: 1.0079,
+    lastNavDate: "2026-11-16",
+  },
 ];
 
 function cssVar(name, fallback = "#6b4c9a") {
@@ -50,8 +59,7 @@ const state = {
   lastPushAt: null,
   hist: null,
   histRange: 30,
-  histChartAi: null,
-  histChartNev: null,
+  histCharts: {},
   activeFundId: FUNDS[0].id,
   dailyEstimates: null,
   compareChart: null,
@@ -74,6 +82,7 @@ function setActiveFund(id) {
   state.activeFundId = id;
   renderFundTabs();
   applyViewVisibility();
+  renderLegend();
   renderAll();
   updateHistoryCharts();
   if (state.holdingsLive) renderHoldings(state.holdingsLive);
@@ -81,8 +90,7 @@ function setActiveFund(id) {
   refreshGuess();
   requestAnimationFrame(() => {
     if (state.chart) state.chart.resize();
-    if (state.histChartAi) state.histChartAi.resize();
-    if (state.histChartNev) state.histChartNev.resize();
+    Object.values(state.histCharts).forEach((c) => c && c.resize());
     if (state.compareChart) state.compareChart.resize();
   });
 }
@@ -280,7 +288,7 @@ function renderCards() {
     (detail && detail.method === "holdings" ? "持仓加权主估值" : detail && detail.method === "index" ? "指数/ETF参考" : "估值");
   const hm = detail && detail.holdingsMeta;
   const holdingsLine = hm
-    ? `持仓源 ${hm.holdingsSource} · ${hm.matched}/${hm.total} 只 · 覆盖 ${hm.coveredWeight}%（主估值）`
+    ? `持仓源 ${hm.holdingsCode} · ${hm.matched}/${hm.total} 只 · 覆盖 ${hm.coveredWeight}%（主估值）`
     : "无持仓数据，已回退指数/ETF";
   const compare =
     detail && detail.holdingsPct != null && detail.indexPct != null
@@ -401,7 +409,7 @@ function renderHistoryChart(chart, fund, points) {
   const ma20Data = buildMa(20);
 
   const ret = seriesData[seriesData.length - 1];
-  const titleEl = document.getElementById(fund.id === "ai" ? "histTitleAi" : "histTitleNev");
+  const titleEl = document.getElementById(`histTitle-${fund.id}`);
   if (titleEl) {
     titleEl.innerHTML =
       `${fund.name} <span class="${textClass(ret)}" style="font-weight:700;margin-left:8px">${formatPct(ret)}</span>` +
@@ -542,8 +550,7 @@ function renderHistMeta(hist) {
 }
 
 function initChart() {
-  const safeInit = (sel) => {
-    const el = $(sel);
+  const safeInit = (el) => {
     if (!el || typeof echarts === "undefined") return null;
     try {
       return echarts.init(el, null, { renderer: "canvas" });
@@ -551,14 +558,29 @@ function initChart() {
       return null;
     }
   };
-  state.chart = safeInit("#chart");
-  state.histChartAi = safeInit("#histChartAi");
-  state.histChartNev = safeInit("#histChartNev");
-  state.compareChart = safeInit("#compareChart");
+  state.chart = safeInit($("#chart"));
+  state.compareChart = safeInit($("#compareChart"));
+
+  // 历史走势图按 FUNDS 动态生成，新增基金无需再改 HTML/JS
+  const grid = $("#histGrid");
+  if (grid) {
+    grid.innerHTML = FUNDS.map(
+      (f) => `<div class="history-item" data-fund="${f.id}" style="display:none">
+        <div class="history-title" id="histTitle-${f.id}">${f.name}</div>
+        <div class="history-chart" id="histChart-${f.id}"></div>
+      </div>`
+    ).join("");
+    state.histCharts = {};
+    for (const fund of FUNDS) {
+      state.histCharts[fund.id] = safeInit(
+        document.getElementById(`histChart-${fund.id}`)
+      );
+    }
+  }
+
   window.addEventListener("resize", () => {
     if (state.chart) state.chart.resize();
-    if (state.histChartAi) state.histChartAi.resize();
-    if (state.histChartNev) state.histChartNev.resize();
+    Object.values(state.histCharts).forEach((c) => c && c.resize());
     if (state.compareChart) state.compareChart.resize();
   });
 }
@@ -567,15 +589,15 @@ function updateHistoryCharts() {
   if (isMarketView()) return;
   if (!state.hist) return;
   const fund = activeFund();
-  const chart = fund.id === "ai" ? state.histChartAi : state.histChartNev;
-  const other = fund.id === "ai" ? state.histChartNev : state.histChartAi;
-  const activeWrap = chart && chart.getDom() ? chart.getDom().parentElement : null;
+  const chart = state.histCharts[fund.id];
+
   // 只显示当前基金的历史图
-  if (other && other.getDom()) {
-    const wrap = other.getDom().parentElement;
-    if (wrap) wrap.style.display = "none";
+  for (const f of FUNDS) {
+    const c = state.histCharts[f.id];
+    const wrap = c && c.getDom() ? c.getDom().parentElement : null;
+    if (wrap) wrap.style.display = f.id === fund.id ? "" : "none";
   }
-  if (activeWrap) activeWrap.style.display = "";
+
   const pts = (state.hist.funds && state.hist.funds[fund.id] && state.hist.funds[fund.id].points) || [];
   renderHistoryChart(chart, fund, pts);
   renderHistMeta(state.hist);

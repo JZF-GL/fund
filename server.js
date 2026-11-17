@@ -56,6 +56,22 @@ const FUNDS = [
     holdingsEquity: 0.9156,
     preferHoldings: true,
   },
+  {
+    id: "mfg",
+    name: "中欧制造升级混合发起C",
+    code: "024648",
+    refName: "主动管理 · 汽车零部件/制造升级",
+    color: "#8b6a5a",
+    lastNav: 1.0079,
+    lastNavDate: "2026-11-16",
+    // 主动权益基金，无跟踪指数/ETF，直接用自身持仓加权
+    // 持仓 = 2026Q2 全量底仓（14 只）+ 2026Q3 最新权重覆盖，合计覆盖 93.21%
+    holdingsSource: "024648",
+    holdingsScale: 1,
+    // 2026Q3 股票仓位 93.49%，与持仓覆盖率基本吻合，残差按已覆盖均值补齐
+    holdingsEquity: 0.9349,
+    preferHoldings: true,
+  },
 ];
 
 const historyCache = new Map(); // code -> { at, points }
@@ -420,11 +436,14 @@ async function fetchTencent(symbol) {
 
 async function fetchQuote(fund) {
   const errors = [];
-  try {
-    const data = await fetchEastmoney(fund.secid);
-    return parseQuote(data, "eastmoney");
-  } catch (e) {
-    errors.push(e.message || String(e));
+  // 主动权益基金没有场内代码，只走持仓估值，避免每轮发无效请求
+  if (fund.secid) {
+    try {
+      const data = await fetchEastmoney(fund.secid);
+      return parseQuote(data, "eastmoney");
+    } catch (e) {
+      errors.push(e.message || String(e));
+    }
   }
   if (fund.tencent) {
     try {
@@ -433,7 +452,7 @@ async function fetchQuote(fund) {
       errors.push(e.message || String(e));
     }
   }
-  throw new Error(errors.join(" / ") || "无可用行情源");
+  throw new Error(errors.join(" / ") || "无行情源（纯持仓估值）");
 }
 
 function parseQuote(data, source = "eastmoney") {

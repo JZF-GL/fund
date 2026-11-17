@@ -9,7 +9,7 @@
  *     --source "https://example.com/news"
  *
  * 参数：
- *   --fund     基金代码（012734 / 011513）或 id（ai / nev），必填
+ *   --fund     基金代码（012734 / 011513 / 024648）或 id（ai / nev / mfg），必填
  *   --target   目标交易日 YYYY-MM-DD，缺省自动取下一个工作日
  *   --dir      up / down / flat（也接受 涨 / 跌 / 平）
  *   --conf     置信度 0-100，缺省 55
@@ -28,10 +28,12 @@ const FILE = path.join(DATA_DIR, "ai-predictions.json");
 const FUND_ID_BY_CODE = {
   "012734": "ai",
   "011513": "nev",
+  "024648": "mfg",
 };
 const CODE_BY_FUND_ID = {
   ai: "012734",
   nev: "011513",
+  mfg: "024648",
 };
 
 function parseArgs(argv) {
@@ -94,7 +96,7 @@ function main() {
   const fundCode = CODE_BY_FUND_ID[rawFund] || rawFund;
   const fundId = FUND_ID_BY_CODE[fundCode];
   if (!fundId) {
-    console.error(`未知基金：${rawFund}（支持 012734 / 011513）`);
+    console.error(`未知基金：${rawFund}（支持 012734 / 011513 / 024648）`);
     process.exit(1);
   }
 

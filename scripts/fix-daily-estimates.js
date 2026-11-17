@@ -5,7 +5,7 @@ const https = require("https");
 
 const ROOT = path.resolve(__dirname, "..");
 const FILE = path.join(ROOT, "data", "daily-estimates.json");
-const CODES = { ai: "012734", nev: "011513" };
+const CODES = { ai: "012734", nev: "011513", mfg: "024648" };
 
 function getText(url) {
   return new Promise((res, rej) => {

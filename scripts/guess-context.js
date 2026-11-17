@@ -9,6 +9,7 @@ const BASE = process.argv[2] || "http://127.0.0.1:5173";
 const FUNDS = [
   { id: "ai", code: "012734", name: "易方达人工智能ETF联接C" },
   { id: "nev", code: "011513", name: "天弘中证新能源汽车指数C" },
+  { id: "mfg", code: "024648", name: "中欧制造升级混合发起C" },
 ];
 
 async function getJson(path) {

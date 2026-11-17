@@ -106,7 +106,7 @@ function backtest(navs, fn) {
 }
 
 (async () => {
-  for (const code of ["012734", "011513"]) {
+  for (const code of ["012734", "011513", "024648"]) {
     const navs = await fetchNavs(code);
     console.log(`\n=== ${code}  ${navs.length}个交易日 (${new Date(navs[0].ts).toISOString().slice(0,10)} ~ ${new Date(navs[navs.length-1].ts).toISOString().slice(0,10)}) ===`);
     for (const [name, fn] of Object.entries(strategies)) {
